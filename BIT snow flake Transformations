@@ -1,0 +1,47 @@
+ # The Snowpark package is required for Python Worksheets. 
+# You can add more packages by selecting them using the Packages control and then importing them.
+
+import snowflake.snowpark as snowpark
+from snowflake.snowpark.functions import col,lit
+from snowflake.snowpark import Session
+
+import uuid
+def generate_unique_id():
+    return str(uuid.uuid4())
+
+def main(session: snowpark.Session): 
+    # Your code goes here, inside the "main" handler.
+    tableName = 'DETASK.COMPANYLEADS'
+    dataframe = session.table(tableName)
+    #dataframe=dataframe.withColumn("New_col",lit(2))
+    dataframe.create_or_replace_temp_view("dataframeV")
+    event_type=session.sql("""select 0 as State,'LeadSold' as EventType union
+                           select 1 as State,'LeadRequestedCancellation' as EventType union 
+                           select 2 as State,'LeadCancelled' as EventType union 
+                           select 3 as State,'LeadCancellationRejected' as EventType""")
+    event_type.create_or_replace_temp_view("event_typeV")
+    out_putdf=session.sql(""" select distinct UUID_STRING() as Id,EventType,case when STATE1 = 0 then SOLDEMPLOYEE when STATE1=2 then CANCELEDEMPLOYEE ELSE 'Unknown'  end as
+EventEmployee,
+case 
+when STATE1=0 then CreatedDateUtc 
+when STATE1=1 then case when CANCELLATIONREQUESTDATEUTC != 'NULL' then to_timestamp(CANCELLATIONREQUESTDATEUTC,'DD.MM.YY HH24:MI') else                 null end
+when STATE1=2 then case when CANCELLATIONDATEUTC != 'NULL' then to_timestamp(CANCELLATIONDATEUTC,'DD.MM.YY HH24:MI') else 
+              null end
+when STATE1=3 then case when CANCELLATIONREJECTIONDATEUTC != 'NULL' then to_timestamp(CANCELLATIONREJECTIONDATEUTC,'DD.MM.YY HH24:MI')                 else null end 
+end as EventDate,ID as LeadID,ID_UPD.UpdatedDateUtc from 
+
+(select distinct * from DE_TASK_DB.DETASK.COMPANYLEADS qualify row_number() over(partition by ID order by UPDATEDDATEUTC desc) = 1) df
+left join
+(select 0 as State1,'LeadSold' as EventType union
+                           select 1 as State1,'LeadRequestedCancellation' as EventType union 
+                           select 2 as State1,'LeadCancelled' as EventType union 
+                           select 3 as State1,'LeadCancellationRejected' as EventType) ET 
+                           On df.STATE >= ET.STATE1
+LEFT JOIN (select ID as Lead_Id,UpdatedDateUtc from DE_TASK_DB.DETASK.COMPANYLEADS qualify row_number() over(partition by ID order by UPDATEDDATEUTC desc) = 1) ID_UPD
+on df.ID = ID_UPD.Lead_Id """)
+    #out_putdf = out_putdf.selectExpr(f'"{generate_unique_id()}" as New_ID')
+    #out_putdf = out_putdf.withColumn("New_ID", lit(generate_unique_id()))
+    out_putdf.write.mode('overwrite').save_as_table('LeadEvents')
+    
+    
+    return out_putdf
