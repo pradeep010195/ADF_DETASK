@@ -1,0 +1,84 @@
+Azure portal
+
+Azure login : basaboinapradeep03@gmail.COM
+password: Jerry@12345
+
+Snowflake Details 
+
+user name :Pradeep123
+password : Deepu@1234
+
+--Create database and table in dbo  
+IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'detask03')
+  BEGIN
+    CREATE DATABASE detask03
+ END
+
+--Creation of master Key 
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Sqlserver@123';
+ALTER MASTER KEY ADD ENCRYPTION BY SERVICE MASTER KEY;
+OPEN MASTER KEY DECRYPTION BY PASSWORD = 'Sqlserver@123';
+
+--CREATE DATABASE SCOPED CREDENTIAL AzureStorageCredential
+WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+SECRET = 'sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2023-08-10T17:37:32Z&st2023-08-05T09:37:32Z&spr=https&sig=p%2F43acclSZS5Ic8q2ftWMu8Jyz93hiKF9lDINJX5dFM%3D';
+Creating datasource connection for ADLS
+CREATE EXTERNAL DATA SOURCE ExcelDataSource
+WITH (
+    TYPE = BLOB_STORAGE,
+    LOCATION = 'https://jerry123456.blob.core.windows.net/data',
+    CREDENTIAL = AzureStorageCredential
+);
+
+--2. Table Script 
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='DE_TASK_DUMMY_DATA' and xtype='U')
+BEGIN
+    CREATE TABLE DE_TASK_DUMMY_DATA (
+    Id NVARCHAR(255),
+    State NVARCHAR(255),
+    CreatedDateUtc NVARCHAR(255),
+    CancellationRequestDateUtc NVARCHAR(255),
+    CancellationDateUtc NVARCHAR(255),
+    CancellationRejectionDateUtc NVARCHAR(255),
+    UndoCancellationDateUtc NVARCHAR(255),
+    CanceledEmployee NVARCHAR(255),
+    SoldEmployee NVARCHAR(255),
+    UpdatedDateUtc NVARCHAR(255)
+);
+END
+
+--3. Query to insert excel data into SQL table
+Insert excel data into table
+BULK INSERT dbo.DE_TASK_DUMMY_DATA
+FROM 'DataEnginnerTaskDummyData.csv'
+WITH (
+    DATA_SOURCE = 'ExcelDataSource',
+    FORMAT = 'CSV', -- Use appropriate format if you created a format file
+    FIRSTROW = 2,   -- Skip header row if needed
+    FIELDTERMINATOR = ';'  -- Use appropriate delimiter based on your Excel file
+);
+
+Target Tables in snow flakes 
+
+create or replace TABLE DE_TASK_DB.DETASK.COMPANYLEADS (
+	ID VARCHAR(255),
+	STATE VARCHAR(255),
+	CREATEDDATEUTC TIMESTAMP_NTZ(9),
+	CANCELLATIONREQUESTDATEUTC VARCHAR(255),
+	CANCELLATIONDATEUTC VARCHAR(255),
+	CANCELLATIONREJECTIONDATEUTC VARCHAR(255),
+	UNDOCANCELLATIONDATEUTC VARCHAR(255),
+	CANCELEDEMPLOYEE VARCHAR(255),
+	SOLDEMPLOYEE VARCHAR(255),
+	UPDATEDDATEUTC TIMESTAMP_NTZ(9)
+);
+
+
+ create or replace TABLE DE_TASK_DB.DETASK.LEADEVENTS (
+	ID VARCHAR(36),
+	EVENTTYPE VARCHAR(25),
+	EVENTEMPLOYEE VARCHAR(255),
+	EVENTDATE TIMESTAMP_NTZ(9),
+	LEADID VARCHAR(255),
+	UPDATEDDATEUTC TIMESTAMP_NTZ(9)
+);
