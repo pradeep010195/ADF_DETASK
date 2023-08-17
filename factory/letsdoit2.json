@@ -1,0 +1,9 @@
+{
+	"name": "letsdoit2",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "dbcf63e6-f139-4bf5-88a3-492cdcab839e",
+		"tenantId": "747e49c0-744d-4143-876e-97cda9c2d924"
+	}
+}

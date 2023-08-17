@@ -1,0 +1,206 @@
+{
+	"name": "PL_copydata",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT Id,state,\nCONVERT(DATETIME, CreatedDateUtc,4 ) as CreatedDateUtc, \nCancellationRequestDateUtc,\nCancellationDateUtc,\nCancellationRejectionDateUtc,\nUndoCancellationDateUtc,\nCanceledEmployee,\t\nSoldEmployee,\nCONVERT(DATETIME, UpdatedDateUtc,4) as UpdatedDateUtc\nFROM [dbo].[DE_TASK_DUMMY_DATA]\nwhere CONVERT(DATETIME, UpdatedDateUtc,4)  >= dateadd(day,-@{pipeline().parameters.days_increment},getdate());",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "SnowflakeSink",
+						"preCopyScript": {
+							"value": "DELETE FROM DE_TASK_DB.DETASK.CompanyLeads where UPDATEDDATEUTC >= DATEADD(DAY,-@{pipeline().parameters.days_increment},current_timestamp);",
+							"type": "Expression"
+						},
+						"importSettings": {
+							"type": "SnowflakeImportCopyCommand"
+						}
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "ls_interm_adls",
+							"type": "LinkedServiceReference"
+						},
+						"path": "deinterm/DETASKDUMMYDATA"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ID",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "State",
+									"type": "String"
+								},
+								"sink": {
+									"name": "STATE",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CreatedDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CREATEDDATEUTC",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CancellationRequestDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CANCELLATIONREQUESTDATEUTC",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CancellationDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CANCELLATIONDATEUTC",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CancellationRejectionDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CANCELLATIONREJECTIONDATEUTC",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "UndoCancellationDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "UNDOCANCELLATIONDATEUTC",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CanceledEmployee",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CANCELEDEMPLOYEE",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "SoldEmployee",
+									"type": "String"
+								},
+								"sink": {
+									"name": "SOLDEMPLOYEE",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "UpdatedDateUtc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "UPDATEDDATEUTC",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_AzureSqlTable",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_Snowflake",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "WebActivity",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-119.westeurope.logic.azure.com:443/workflows/ac759d8292514480aa0df7eae9e2631f/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=3jC9L98Yk4z-aqrq8qBN6sFiFPCghbTgBizq8-Z23JU",
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": {
+						"value": "{\n    \"PipelineName\":\"@{pipeline().Pipeline}\",\n    \"ErrorMessage\":\"@{activity('Copy data1').Error.Message}\"\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"days_increment": {
+				"type": "string",
+				"defaultValue": "90"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-17T12:57:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

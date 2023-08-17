@@ -1,0 +1,68 @@
+{
+	"name": "DS_Snowflake",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Snowflake1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "STATE",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "CREATEDDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "CANCELLATIONREQUESTDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "CANCELLATIONDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "CANCELLATIONREJECTIONDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "UNDOCANCELLATIONDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "CANCELEDEMPLOYEE",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "SOLDEMPLOYEE",
+				"type": "VARCHAR",
+				"scale": 0
+			},
+			{
+				"name": "UPDATEDDATEUTC",
+				"type": "VARCHAR",
+				"scale": 0
+			}
+		],
+		"typeProperties": {
+			"schema": "DETASK",
+			"table": "COMPANYLEADS"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

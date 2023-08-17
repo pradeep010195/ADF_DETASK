@@ -1,0 +1,58 @@
+{
+	"name": "DS_AzureSqlTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "nvarchar"
+			},
+			{
+				"name": "State",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CreatedDateUtc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CancellationRequestDateUtc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CancellationDateUtc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CancellationRejectionDateUtc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "UndoCancellationDateUtc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CanceledEmployee",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SoldEmployee",
+				"type": "nvarchar"
+			},
+			{
+				"name": "UpdatedDateUtc",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DE_TASK_DUMMY_DATA"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
